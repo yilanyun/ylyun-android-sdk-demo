@@ -10,7 +10,7 @@ import android.widget.Toast;
 
 import com.yilan.sdk.entity.Channel;
 import com.yilan.sdk.entity.ChannelList;
-import com.yilan.sdk.net.request.NSubscriber;
+import com.yilan.sdk.net.NSubscriber;
 import com.yilan.sdk.net.request.YLFeedRequest;
 import com.yilan.sdk.ui.littlevideo.LittleVideoFragment;
 
