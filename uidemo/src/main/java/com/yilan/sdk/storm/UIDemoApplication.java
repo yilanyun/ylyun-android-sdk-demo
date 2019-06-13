@@ -24,17 +24,17 @@ public class UIDemoApplication extends Application {
                 .build();
 
         //Feed流页面配置
-        FeedConfig.getInstance()
-                .setPlayerStyle(FeedConfig.STYLE_NATIVE)
-                .setViewHolder(new FeedStyleViewHolder())
-                .setOnItemClickListener(new FeedConfig.OnClickListener() {
-                    @Override
-                    public boolean onClick(Context context, MediaInfo info) {
-                        Log.e(TAG, "点击了 " + info.getH5_url());
+//        FeedConfig.getInstance()
+//                .setPlayerStyle(FeedConfig.STYLE_NATIVE)
+//                .setViewHolder(new FeedStyleViewHolder())
+//                .setOnItemClickListener(new FeedConfig.OnClickListener() {
+//                    @Override
+//                    public boolean onClick(Context context, MediaInfo info) {
+//                        Log.e(TAG, "点击了 " + info.getH5_url());
 //                        WebActivity.start(context, info.getH5_url(),"");
-                        return false;
-                    }
-                });
+//                        return false;
+//                    }
+//                });
         //播放页配置
 //        PlayerConfig.getInstance().setPlayerStyle(PlayerConfig.STYLE_NATIVE_FEED);
         //小视频页面配置
