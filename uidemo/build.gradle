@@ -2,13 +2,22 @@ apply plugin: 'com.android.application'
 apply from: '../config.gradle'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'yilan'
+            keyPassword 'yilantech'
+            storeFile file('/Users/lihu/Git/Storm_android/sdkdemo/yilan.jks')
+            storePassword 'yilantech'
+        }
+    }
     compileSdkVersion 27
     defaultConfig {
         applicationId 'tv.yilan.sdk.uidemo'
-        minSdkVersion 14
+        minSdkVersion 15
         targetSdkVersion 27
         versionCode 1
         versionName "1.0.1"
+        signingConfig signingConfigs.config
     }
     buildTypes {
         release {
