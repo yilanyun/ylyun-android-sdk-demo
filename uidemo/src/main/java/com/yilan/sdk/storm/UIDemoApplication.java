@@ -23,10 +23,12 @@ public class UIDemoApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-        //初始化
+        //TODO ！！！！
+        // 初始化，key和token需要去官网申请
         YLUIInit.getInstance()
                 .setApplication(this)
-//                .setUid("uisdk id")
+                .setAccessKey("")
+                .setAccessToken("")
                 .build();
 
         //Feed流页面配置
