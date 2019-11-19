@@ -4,6 +4,8 @@
 
 官网接入指南地址：http://doc.yilan.tv/feed/guideline/usage/
 
+# 通用Android UI SDK 文档
+
 ReleaseNote
 
 | 版本    | 时间           | 修改内容                                                     |
@@ -22,6 +24,12 @@ ReleaseNote
 | 1.3.0.2 | 2019年8月12日  | 1、 播放器支持httpdns <br/>2、评论添加开关                   |
 | 1.3.2.1 | 2019年8月22日  | 1、视频播放页相关广告支持deeplink<br/>2、修改部分机型不能弹出安装提示<br/>3、增加小视频添加cp头像和点赞数<br/>4、修改小视频重播不显示封面问题 |
 | 1.3.4.1 | 2019年8月29日  | 1、升级穿山甲依赖至 2.3.0.4版本<br>2、小视频广告增加播放回调，增加本地保存点赞结果 <br>3、小视频相关问题修复 |
+| 1.3.6.1 | 2019年9月6日   | 1、播放页banner广告支持多种尺寸<br>2、feed列表在当前页播放时支持获取播放器状态<br>3、其他样式调整 |
+| 1.3.8.1 | 2019年9月16日  | 1、小视频支持分享回调<br>2、优化播放页样式                   |
+| 1.4.0.1 | 2019年9月23日  | 1、增加小视频cp页面 <br> 2、增加视频边下边播功能 <br> 3、修复小视频不登录时的点赞效果和点赞数 |
+| 1.5.0.1 | 2019年10月14日 | 1、短视频页面支持多种样式广告<br>2、feed流支持视频广告       |
+| 1.6.2.1 | 2019年11月1日  | 1、增加多个图片加载框架，去除对glide的依赖<br>2、修改部分机型稳定性 |
+| 1.7.2.1 | 2019年11月19日 | 1、增加feed流当前页播放的回调<br>2、修复了一些线上的崩溃     |
 
 
 
@@ -83,18 +91,17 @@ allprojects {
 在使用的module中加入依赖，具体sdk版本根据发布的文档为准
 
 ```
-implementation 'com.yilan.sdk:ui:x.x.x'//修改为具体的sdk版本
+implementation "com.yilan.sdk:ui:${SDK_VERSION}"//修改为具体的sdk版本
+implementation "com.yilan.sdk:ad:${SDK_VERSION}"//修改为具体的sdk版本,支持广点通、百度广告
 implementation 'com.squareup.okhttp3:okhttp:3.11.0'
 implementation 'com.google.code.gson:gson:2.8.5'
-implementation 'com.github.bumptech.glide:glide:4.8.0'
-implementation 'jp.wasabeef:glide-transformations:3.1.1'
 implementation 'com.android.support:recyclerview-v7:28.0.0'
 implementation ('com.aliyun.ams:alicloud-android-httpdns:1.2.3@aar') {
         transitive true
     }
-    //支持ijkplayer进行播放，建议添加
-    //implementation 'tv.danmaku.ijk.media:ijkplayer-java:0.8.8'
-    //implementation 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.8.8'
+    //支持ijkplayer进行播放，非必选，建议添加
+    implementation 'tv.danmaku.ijk.media:ijkplayer-java:0.8.8'
+    implementation 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.8.8'
 ```
 
 ### 2、示例demo工程接入
@@ -156,26 +163,52 @@ Fragment fragment = FeedFragment.newInstance(channel);
 
 需在ChannelFragment (FeedFragment) **初始化之前**调用。
 
-```
+```java
 FeedConfig.getInstance()
-  .setViewHolder(new TestFeedViewHolder())//自定义样式
-  .setPlayerStyle(FeedConfig.STYLE_FEED_PLAY)
-  .setOnItemClickListener(new FeedConfig.OnClickListener() {//点击回调
-  @Override
-  public boolean onClick(MediaInfo info) {
-    Log.e(TAG, "点击了 " + info);
-    return false;
-  }
-  });
+                .setUserCallback(new UserCallback() {
+                    @Override
+                    public boolean event(int type, //播放状态
+                                         PlayData data, //播放的数据，可能为null
+                                         int playerHash//哪个播放器ß) {
+                        switch (type) {
+                            case Constant.STATE_PREPARED:
+                                break;
+                            case Constant.STATE_ERROR:
+                                break;
+                            case Constant.STATE_PLAYING:
+                                break;
+                            case Constant.STATE_COMPLETE:
+                                break;
+                            case Constant.STATE_PAUSED:
+                                break;
+                        }
+                        Log.e("player state", type + " ");
+                        return false;
+                    }
+                })
+                .setShareCallBack(new ShareCallback() {
+                    @Override
+                    public void onShare(MediaInfo mediaInfo) {
+                        Log.e("share", mediaInfo.getVideo_id());
+                    }
+                }).setOnItemClickListener(new FeedConfig.OnClickListener() {
+            @Override
+            public boolean onClick(Context context, MediaInfo info) {
+                Log.e("click ", "点击了 " + info);
+                return false;
+            }//点击回调
+        });
 ```
 
 方法说明：
 
-| 方法名                 | 方法说明                                                     |
-| ---------------------- | ------------------------------------------------------------ |
-| setViewHolder          | 设置Item样式，必须继承MediaViewHolder,具体见Demo，否则服无法播放视频。 |
-| setOnItemClickListener | 设置点击的item回调。<br />return true:不跳转，接入方负责跳转;return false,使用默认跳转 |
-| setPlayerStyle         | 设置feed流打开样式，目前支持一下4种：<br />FeedConfig._STYLE_NATIVE;//_**_默认_**_为Native播放页_<br />FeedConfig._STYLE_FEED_PLAY;//Feed流当前页播放_<br />FeedConfig._STYLE_NATIVE_FEED;//播放页Feed流_<br />FeedConfig._STYLE_WEB;//Webview打开_ |
+| 方法名                                           | 方法说明                                                     |
+| ------------------------------------------------ | ------------------------------------------------------------ |
+| setViewHolder（MediaViewHolder mediaViewHolder） | 设置Item样式，必须继承MediaViewHolder,具体见Demo，否则服无法播放视频。 |
+| setOnItemClickListener                           | 设置点击的item回调。<br />return true:不跳转，接入方负责跳转;return false,使用默认跳转 |
+| setPlayerStyle(int playerStyle)                  | 设置feed流打开样式，目前支持一下4种：<br />FeedConfig._STYLE_NATIVE;//_**_默认_**_为Native播放页_<br />FeedConfig._STYLE_FEED_PLAY;//Feed流当前页播放_<br />FeedConfig._STYLE_NATIVE_FEED;//播放页Feed流_<br />FeedConfig._STYLE_WEB;//Webview打开_ |
+| setUserCallBack(UserCallback callback)           | 只有在feed流当前页播放模式下才有效。UserCallback可以获取当前视频播放器的各种状态。<br>目前支持的状态有： |
+| setShareCallBack(ShareCallback shareCallBack)    | 设置feed流分享回调，使用share_url字段的链接进行分享          |
 
 ### 3.2.4 PlayerConfig 播放页配置
 
@@ -183,6 +216,7 @@ FeedConfig.getInstance()
 
 ```
 PlayerConfig.getInstance()
+						.setShareCallback(new ShareCallback())
 						.setCommentType(PlayerConfig.SHOW_COMMENT_ALL)；
 ```
 
@@ -190,9 +224,10 @@ PlayerConfig.getInstance()
 
 方法说明：
 
-| 方法名         | 方法说明                                                     |
-| -------------- | ------------------------------------------------------------ |
-| setCommentType | 设置播放页评论显示类，目前支持一下3种：<br />PlayerConfig.SHOW_COMMENT_ALL;//显示评论列表，并支持评论_<br />PlayerConfig.SHOW_COMMENT_LIST;//只显示评论列表，不支持评论_<br/>PlayerConfig.DISMISS_COMMENT//隐藏评论列表 |
+| 方法名           | 方法说明                                                     |
+| ---------------- | ------------------------------------------------------------ |
+| setCommentType   | 设置播放页评论显示类，目前支持一下3种：<br />PlayerConfig.SHOW_COMMENT_ALL;//显示评论列表，并支持评论_<br />PlayerConfig.SHOW_COMMENT_LIST;//只显示评论列表，不支持评论_<br/>PlayerConfig.DISMISS_COMMENT//隐藏评论列表 |
+| setShareCallback | 设置播放页分享回调，使用share_url字段的链接进行分享          |
 
 ### 
 
@@ -208,12 +243,15 @@ LittleVideoFragment fragment = LittleVideoFragment.newInstance();
 //                setUserCallBack(new UserCallback() {
 //                    @Override
 //                    public boolean event(int type, PlayData data, int playerHash) {
-//
 //                        switch (type) {
 //                            case Constant.STATE_PREPARED:
+//															break;
 //                            case Constant.STATE_ERROR:
+//															break;
 //                            case Constant.STATE_PLAYING:
+//															break;
 //                            case Constant.STATE_COMPLETE:
+//															break;
 //                            case Constant.STATE_PAUSED:
 //                                break;
 //                        }
@@ -231,6 +269,7 @@ manager.beginTransaction().replace(R.id.content, channelFragment).commitAllowing
 | playNext()                                                   | 播放下一集                                                   |
 | onPause()、<br />onResume（）、onHiddenChange(boolean hidden)、<br />setUserHint(boolean) | 如果在**Fragment内嵌LittleVideoFragment**，需要手动回调以下Fragment声明周期函数。直接在Activity里面使用则不需要。否则会造成不可见播放等异常情况。 |
 | setUserCallBack(UserCallback callback )                      | 设置点击的item播放状态,callback返回true标识用户已经处理了event，返回false，标识使用播放器内部逻辑处理event。 |
+| setShareCallBack(ShareCallback shareCallBack)                | 设置分享回调，设置后分享按钮会显示出来，接入方实现Callback方法，使用share_url字段的链接进行分享 |
 
 
 
@@ -484,11 +523,12 @@ YLUser为单例使用，常用的方法如下。
 
 目前sdk已经支持大部分联盟广告， 如接入方已经接入了联盟广告，可以将广告位appid和广告位id告知一览广告人员，在一览后台进行统一下发后，SDK端进行渲染显示。目前sdk支持的广告汇总如下：
 
-| 联盟名称\广告位 | feed流 | 小视频 | 播放页相关推荐 |
-| --------------- | ------ | ------ | -------------- |
-| 穿山甲          | 图片   | 视频   | 图片           |
-| 广点通          | 图片   | 不支持 | 图片           |
-| 百度            | 图片   | 不支持 | 图片           |
+| 联盟名称\广告位  | feed流     | 小视频 | 播放页相关推荐 |
+| ---------------- | ---------- | ------ | -------------- |
+| 直投（一览下发） | 图片、视频 | 图片   | 图片、视频     |
+| 穿山甲           | 图片       | 视频   | 图片           |
+| 广点通           | 图片       | 不支持 | 图片           |
+| 百度             | 图片       | 不支持 | 图片           |
 
 接入步骤如下：
 
@@ -598,6 +638,11 @@ YLUser为单例使用，常用的方法如下。
 //implementation ('com.aliyun.ams:alicloud-android-httpdns:1.2.3@aar') {
 //        transitive true
 //    }
+如支付宝和httpdns冲突
+implementation('com.aliyun.ams:alicloud-android-httpdns:1.2.3', {
+        exclude group: 'com.ta.utdid2'
+        exclude group: 'com.ut.device'
+    })
 
 ```
 
@@ -607,6 +652,7 @@ YLUser为单例使用，常用的方法如下。
 compile ('com.xxx:xxx.xxx:1.0.1') {
 exclude (module: 'alicloud-android-utdid')
 }
+
 
 ```
 
